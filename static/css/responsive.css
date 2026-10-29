@@ -1,0 +1,113 @@
+/* ============================================================
+   AFTER HOURS — RESPONSIVE & MOBILE STYLING (<= 600px)
+   ============================================================ */
+
+@media (max-width: 600px) {
+    .gradio-container {
+        width: calc(100% - 16px) !important;
+        padding-top: 12px !important;
+    }
+
+    #composer-row {
+        gap: 6px !important;
+    }
+
+    #emoji-column,
+    #attachment-column,
+    #emoji-column > div,
+    #attachment-column > div,
+    #emoji-widget,
+    #emoji-toggle,
+    #attachment-toggle,
+    #attachment-toggle button {
+        flex-basis: 42px !important;
+        width: 42px !important;
+        min-width: 42px !important;
+        max-width: 42px !important;
+    }
+
+    #emoji-widget,
+    #emoji-toggle,
+    #attachment-toggle,
+    #attachment-toggle button {
+        height: 44px !important;
+        min-height: 44px !important;
+        max-height: 44px !important;
+    }
+
+    #emoji-toggle {
+        border-radius: 12px !important;
+    }
+
+    #attachment-toggle,
+    #attachment-toggle button {
+        border-radius: 12px !important;
+    }
+
+    #attachment-toggle button::before {
+        font-size: 29px !important;
+    }
+
+    #emoji-toggle svg {
+        width: 23px !important;
+        height: 23px !important;
+    }
+
+    #send-column {
+        flex-basis: 66px !important;
+        width: 66px !important;
+        min-width: 66px !important;
+        max-width: 66px !important;
+    }
+
+    #send-button,
+    #send-button button {
+        height: 44px !important;
+        min-height: 44px !important;
+        max-height: 44px !important;
+        padding: 0 5px !important;
+        font-size: 11px !important;
+        border-radius: 11px !important;
+    }
+
+    #message-input textarea {
+        min-height: 58px !important;
+        padding: 10px !important;
+        font-size: 14px !important;
+    }
+
+    #chat-feed-panel {
+        height: 340px !important;
+        max-height: 50vh !important;
+        padding: 10px !important;
+    }
+
+    #chat-feed-panel img.chat-image {
+        width: 235px !important;
+        height: 170px !important;
+    }
+
+    #attachment-panel {
+        width: 100% !important;
+    }
+
+    #attachment-options {
+        gap: 7px !important;
+    }
+
+    #image-option,
+    #document-option {
+        min-width: 0 !important;
+        flex: 1 1 0 !important;
+    }
+
+    #image-option button,
+    #document-option button {
+        padding: 8px 5px !important;
+        font-size: 12px !important;
+    }
+
+    .emoji-grid {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+}

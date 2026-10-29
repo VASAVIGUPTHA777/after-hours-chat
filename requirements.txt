@@ -1,0 +1,13 @@
+# ============================================================
+# After Hours Chat — Dependencies
+# Python 3.9+ (Python 3.10, 3.11, 3.12, 3.13 supported)
+# ============================================================
+
+# Primary web UI framework (pinned to verified Colab version)
+gradio==6.30.0
+
+# Image processing and verification
+pillow>=10.0.0
+
+# Timezone database provider for zoneinfo on Windows and Colab
+tzdata>=2024.1

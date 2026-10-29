@@ -1,0 +1,95 @@
+"""Unit tests for backend.media_service."""
+
+import os
+import tempfile
+import unittest
+
+from backend.media_service import (
+    media_url,
+    process_media_item,
+    validate_image_header,
+    validate_pdf_header,
+)
+from config.settings import MAX_FILE_SIZE
+
+
+class TestMediaService(unittest.TestCase):
+    def test_media_url_formatting(self):
+        """media_url must generate /gradio_api/file= URLs with quoted paths."""
+        url = media_url("/tmp/test image.png")
+        self.assertTrue(url.startswith("/gradio_api/file="))
+        self.assertIn("test%20image.png", url)
+
+    def test_validate_image_header(self):
+        """Magic bytes for PNG, JPEG, GIF, and WEBP should pass."""
+        # PNG
+        self.assertTrue(
+            validate_image_header(b"\x89PNG\r\n\x1a\n" + b"\x00" * 8, ".png")
+        )
+        # JPEG
+        self.assertTrue(
+            validate_image_header(b"\xff\xd8\xff" + b"\x00" * 13, ".jpg")
+        )
+        # GIF87a / GIF89a
+        self.assertTrue(
+            validate_image_header(b"GIF87a" + b"\x00" * 10, ".gif")
+        )
+        self.assertTrue(
+            validate_image_header(b"GIF89a" + b"\x00" * 10, ".gif")
+        )
+        # WEBP (RIFF....WEBP)
+        self.assertTrue(
+            validate_image_header(b"RIFF\x00\x00\x00\x00WEBP", ".webp")
+        )
+
+        # Invalid header
+        self.assertFalse(validate_image_header(b"NOTANIMAGE", ".png"))
+        # Invalid extension
+        self.assertFalse(
+            validate_image_header(b"\x89PNG\r\n\x1a\n", ".exe")
+        )
+
+    def test_validate_pdf_header(self):
+        """PDF header must start with %PDF- and have .pdf extension."""
+        self.assertTrue(validate_pdf_header(b"%PDF-1.4\n", ".pdf"))
+        self.assertFalse(validate_pdf_header(b"NOTPDF", ".pdf"))
+        self.assertFalse(validate_pdf_header(b"%PDF-1.4\n", ".txt"))
+
+    def test_process_media_file_size_limit(self):
+        """Files exceeding MAX_FILE_SIZE (5 MB) must be rejected."""
+        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
+            f.write(b"\x89PNG\r\n\x1a\n")
+            f.seek(MAX_FILE_SIZE + 10)
+            f.write(b"\x00")
+            temp_name = f.name
+
+        try:
+            success, msg, info = process_media_item(temp_name, "image")
+            self.assertFalse(success)
+            self.assertIn("exceeds the 5 MB limit", msg)
+            self.assertIsNone(info)
+        finally:
+            if os.path.exists(temp_name):
+                os.remove(temp_name)
+
+    def test_process_valid_image(self):
+        """A valid image should be copied and return file info."""
+        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
+            f.write(b"\x89PNG\r\n\x1a\n" + b"\x00" * 32)
+            temp_name = f.name
+
+        try:
+            success, msg, info = process_media_item(temp_name, "image")
+            self.assertTrue(success)
+            self.assertIsNotNone(info)
+            self.assertEqual(info["kind"], "image")
+            self.assertTrue(os.path.exists(info["path"]))
+            # Clean up destination
+            os.remove(info["path"])
+        finally:
+            if os.path.exists(temp_name):
+                os.remove(temp_name)
+
+
+if __name__ == "__main__":
+    unittest.main()

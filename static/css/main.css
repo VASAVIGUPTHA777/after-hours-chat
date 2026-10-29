@@ -1,0 +1,101 @@
+/* ============================================================
+   AFTER HOURS — MAIN LAYOUT & HEADER STYLING
+   ============================================================ */
+
+.gradio-container {
+    width: min(calc(100% - 28px), 1100px) !important;
+    max-width: 1100px !important;
+    margin: auto !important;
+    padding: 20px 0 28px !important;
+    background: #0b141a !important;
+    color: #e9edef !important;
+}
+
+.gradio-container, .gradio-container * {
+    box-sizing: border-box !important;
+}
+
+.gradio-container .wrap {
+    min-width: 0 !important;
+}
+
+#main-title {
+    text-align: center;
+}
+
+#main-title h1 {
+    color: #25d366 !important;
+    font-size: clamp(30px, 4vw, 42px) !important;
+    font-weight: 900 !important;
+    margin: 0 0 6px !important;
+}
+
+#subtitle {
+    color: #aebac1;
+    text-align: center;
+    margin: 0 0 22px;
+}
+
+/* Join room */
+
+#join-row {
+    align-items: end !important;
+    gap: 12px !important;
+}
+
+#join-button, #join-button button {
+    background: #128c7e !important;
+    border-color: #128c7e !important;
+    border-radius: 9px !important;
+}
+
+#join-alert {
+    background: #172229;
+    border: 1px solid #303d44;
+    border-radius: 10px;
+    padding: 9px 13px;
+    margin: 10px 0 12px;
+}
+
+/* Chat header */
+
+#chat-header {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    padding: 12px 15px !important;
+    margin-top: 8px !important;
+    background: #202c33 !important;
+    border: 1px solid #303d44 !important;
+    border-radius: 13px 13px 0 0 !important;
+}
+
+.room-identity {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+}
+
+.room-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: #128c7e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    color: white;
+}
+
+.room-name {
+    font-weight: 750;
+}
+
+.room-description {
+    color: #aebac1;
+    font-size: 12px;
+    margin-top: 3px;
+}
