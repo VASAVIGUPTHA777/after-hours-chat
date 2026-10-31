@@ -1,3 +1,4 @@
+
 """Unit tests for backend.media_service."""
 
 import os
@@ -14,37 +15,32 @@ from config.settings import MAX_FILE_SIZE
 
 
 class TestMediaService(unittest.TestCase):
+
     def test_media_url_formatting(self):
-        """media_url must generate /gradio_api/file= URLs with quoted paths."""
+        """media_url must generate quoted Gradio file URLs."""
         url = media_url("/tmp/test image.png")
         self.assertTrue(url.startswith("/gradio_api/file="))
         self.assertIn("test%20image.png", url)
 
     def test_validate_image_header(self):
-        """Magic bytes for PNG, JPEG, GIF, and WEBP should pass."""
-        # PNG
+        """Supported image signatures should pass."""
         self.assertTrue(
             validate_image_header(b"\x89PNG\r\n\x1a\n" + b"\x00" * 8, ".png")
         )
-        # JPEG
         self.assertTrue(
             validate_image_header(b"\xff\xd8\xff" + b"\x00" * 13, ".jpg")
         )
-        # GIF87a / GIF89a
         self.assertTrue(
             validate_image_header(b"GIF87a" + b"\x00" * 10, ".gif")
         )
         self.assertTrue(
             validate_image_header(b"GIF89a" + b"\x00" * 10, ".gif")
         )
-        # WEBP (RIFF....WEBP)
         self.assertTrue(
             validate_image_header(b"RIFF\x00\x00\x00\x00WEBP", ".webp")
         )
 
-        # Invalid header
         self.assertFalse(validate_image_header(b"NOTANIMAGE", ".png"))
-        # Invalid extension
         self.assertFalse(
             validate_image_header(b"\x89PNG\r\n\x1a\n", ".exe")
         )
@@ -56,7 +52,7 @@ class TestMediaService(unittest.TestCase):
         self.assertFalse(validate_pdf_header(b"%PDF-1.4\n", ".txt"))
 
     def test_process_media_file_size_limit(self):
-        """Files exceeding MAX_FILE_SIZE (5 MB) must be rejected."""
+        """Files exceeding MAX_FILE_SIZE must be rejected."""
         with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
             f.write(b"\x89PNG\r\n\x1a\n")
             f.seek(MAX_FILE_SIZE + 10)
@@ -73,7 +69,7 @@ class TestMediaService(unittest.TestCase):
                 os.remove(temp_name)
 
     def test_process_valid_image(self):
-        """A valid image should be copied and return file info."""
+        """A PNG-signature file should be accepted by current validation."""
         with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
             f.write(b"\x89PNG\r\n\x1a\n" + b"\x00" * 32)
             temp_name = f.name
@@ -84,8 +80,54 @@ class TestMediaService(unittest.TestCase):
             self.assertIsNotNone(info)
             self.assertEqual(info["kind"], "image")
             self.assertTrue(os.path.exists(info["path"]))
-            # Clean up destination
             os.remove(info["path"])
+        finally:
+            if os.path.exists(temp_name):
+                os.remove(temp_name)
+
+    def test_rejects_png_header_with_jpg_extension(self):
+        self.assertFalse(
+            validate_image_header(
+                b"\x89PNG\r\n\x1a\n" + b"\x00" * 8,
+                ".jpg",
+            )
+        )
+
+    def test_rejects_jpeg_header_with_png_extension(self):
+        self.assertFalse(
+            validate_image_header(
+                b"\xff\xd8\xff" + b"\x00" * 13,
+                ".png",
+            )
+        )
+
+    def test_rejects_gif_header_with_webp_extension(self):
+        self.assertFalse(
+            validate_image_header(
+                b"GIF89a" + b"\x00" * 10,
+                ".webp",
+            )
+        )
+
+    def test_accepts_jpeg_header_with_jpeg_extension(self):
+        self.assertTrue(
+            validate_image_header(
+                b"\xff\xd8\xff" + b"\x00" * 13,
+                ".jpeg",
+            )
+        )
+
+    def test_process_rejects_mismatched_image_extension(self):
+        """A PNG file renamed as JPG must be rejected."""
+        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as f:
+            f.write(b"\x89PNG\r\n\x1a\n" + b"\x00" * 32)
+            temp_name = f.name
+
+        try:
+            success, msg, info = process_media_item(temp_name, "image")
+            self.assertFalse(success)
+            self.assertIn("invalid image file", msg)
+            self.assertIsNone(info)
         finally:
             if os.path.exists(temp_name):
                 os.remove(temp_name)

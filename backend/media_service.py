@@ -1,4 +1,6 @@
-"""Media handling, validation, storage, and URL generation for After Hours Chat.
+
+"""
+Media handling, validation, storage, and URL generation for After Hours Chat.
 
 Handles image previews and PDF document attachments with magic byte header
 verification, size limits, and Gradio file serving URLs.
@@ -26,20 +28,32 @@ def media_url(path: str) -> str:
 
 
 def validate_image_header(header: bytes, ext: str) -> bool:
-    """Validate binary magic bytes for allowed image formats."""
+    """Validate that image magic bytes match the supplied file extension."""
+
+    extension_signatures = {
+        ".png": b"\x89PNG\r\n\x1a\n",
+        ".jpg": b"\xff\xd8\xff",
+        ".jpeg": b"\xff\xd8\xff",
+        ".gif": (b"GIF87a", b"GIF89a"),
+        ".webp": b"WEBP",
+    }
+
     if ext not in ALLOWED_IMAGE_EXTENSIONS:
         return False
 
-    return bool(
-        header.startswith(b"\x89PNG\r\n\x1a\n")
-        or header.startswith(b"\xff\xd8\xff")
-        or header.startswith((b"GIF87a", b"GIF89a"))
-        or (
+    if ext == ".webp":
+        return (
             len(header) >= 12
             and header[:4] == b"RIFF"
             and header[8:12] == b"WEBP"
         )
-    )
+
+    signature = extension_signatures.get(ext)
+
+    if isinstance(signature, tuple):
+        return header.startswith(signature)
+
+    return signature is not None and header.startswith(signature)
 
 
 def validate_pdf_header(header: bytes, ext: str) -> bool:
@@ -85,6 +99,7 @@ def process_media_item(
         kind = "image"
 
     destination = os.path.join(MEDIA_DIR, uuid.uuid4().hex + ext)
+
     try:
         shutil.copy2(source, destination)
     except OSError:
@@ -96,4 +111,5 @@ def process_media_item(
         "path": destination,
         "size": size,
     }
+
     return True, "", file_info
